@@ -122,12 +122,13 @@ function vSetup(){var p=st.prefs;
   return '<h1><img class="appicon" src="icon-192.png" alt="" width="40" height="40">Observation volley</h1><p class="muted">Un observateur par terrain. À chaque point, touche la façon dont il a été marqué.</p>'+
   '<div class="card"><div class="row2"><div><label for="ea">Équipe 1</label><input id="ea" placeholder="Équipe A" autocomplete="off"></div><div><label for="eb">Équipe 2</label><input id="eb" placeholder="Équipe B" autocomplete="off"></div></div>'+
   '<div class="row2"><div><label for="ob">Observateur (prénom)</label><input id="ob" value="'+esc(p.o)+'" autocomplete="off"></div><div><label for="tr">Terrain</label><select id="tr">'+[1,2,3,4,5,6].map(function(n){return '<option'+(String(n)===String(p.tr)?' selected':'')+'>'+n+'</option>'}).join('')+'</select></div></div>'+
+  '<div class="row2"><div><label for="nv">Niveau (pour les situations proposées)</label><select id="nv"><option value="T"'+(p.nv!=='P'?' selected':'')+'>Terminale</option><option value="P"'+(p.nv==='P'?' selected':'')+'>Première</option></select></div><div></div></div>'+
   '<p id="msg" class="small" style="color:var(--b);min-height:1.2em"></p><button class="btn pri big" onclick="start()">Commencer le match</button></div>'+
   (st.list.length?'<h2>Matchs déjà observés</h2><button class="btn" onclick="go(\'hist\')">Revoir les matchs et leurs QR codes ('+st.list.length+')</button>':'');}
-function start(){var a=document.getElementById('ea').value.trim(),b=document.getElementById('eb').value.trim(),o=document.getElementById('ob').value.trim(),tr=document.getElementById('tr').value;
+function start(){var a=document.getElementById('ea').value.trim(),b=document.getElementById('eb').value.trim(),o=document.getElementById('ob').value.trim(),tr=document.getElementById('tr').value,nv=document.getElementById('nv').value;
   if(!a||!b){document.getElementById('msg').textContent='Écris le nom des deux équipes (par exemple « Équipe A »).';return}
   if(a.toLowerCase()===b.toLowerCase()){document.getElementById('msg').textContent='Les deux équipes doivent avoir des noms différents.';return}
-  st.prefs={o:o,tr:tr};st.cur={id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),d:new Date().toISOString(),o:o,tr:tr,a:a,b:b,q:''};save();st.view='match';render()}
+  st.prefs={o:o,tr:tr,nv:nv};st.cur={id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),d:new Date().toISOString(),o:o,tr:tr,nv:nv,a:a,b:b,q:''};save();st.view='match';render()}
 function colHtml(T){var c=st.cur,name=T==='A'?c.a:c.b,cc=counts(c.q,T);
   return '<div class="col '+T+'"><h3>'+esc(name)+'</h3><div class="score" id="sc'+T+'">'+tot(cc)+'</div><div class="ask">Point marqué par '+esc(name)+'</div><div class="pts">'+
   TYPES.map(function(x){return '<button class="pt" onclick="pt(\''+T+'\',\''+x.k+'\')"><b>'+x.t+'</b><span>'+x.d+'</span></button>'}).join('')+'</div></div>'}
@@ -166,7 +167,7 @@ function analyse(m,T){var me=counts(m.q,T),op=counts(m.q,T==='A'?'B':'A'),n=tot(
   var obj={pas3:'au moins '+P(me.a+2,'point')+' en attaque à 3 touches',vite:'au moins '+P(me.a+2,'point')+' en attaque à 3 touches',
     faute:'au plus '+P(Math.max(1,op.f-2),'point')+' donné'+(Math.max(1,op.f-2)>1?'s':'')+' sur vos fautes',def:'au plus '+P(Math.max(1,op.a-1),'point')+' encaissé'+(Math.max(1,op.a-1)>1?'s':'')+' sur attaque adverse',
     rec:op.s>2?'au plus '+P(op.s-2,'point')+' perdu'+(op.s-2>1?'s':'')+' sur le service adverse':'aucun point perdu sur le service adverse',plus:'au moins '+P(me.a+1,'point')+' en attaque à 3 touches'}[cle];
-  return {me:me,op:op,n:n,fort:fort,trav:trav,cle:cle,sit:SITU[cle],obj:obj}}
+  return {me:me,op:op,n:n,fort:fort,trav:trav,cle:cle,sit:(SITU_NIV[m.nv]||SITU)[cle],obj:obj}}
 /* Situation du cycle qui répond à la priorité (outil de cycle volley, Terminale et Première) */
 var SITU={
   pas3:'« Grand point / petit point » : le point marqué en 3 touches compte double (S5 Terminale, S6 Première).',
@@ -175,6 +176,20 @@ var SITU={
   def:'« Attaque contre défense 4c4 » : fléchi, replacé au fond avant la frappe (S6 Terminale).',
   rec:'« Réception notée » : sous service ciblé (S5 Terminale) · « Service et réception notée » (S3 Première, S4 Terminale).',
   plus:'« Attaque à 4 » : finir la 3e touche vers une zone libre (S4 Terminale, S5 Première).'};
+/* Le niveau choisi à l'accueil ne garde que les situations de son cycle (sans niveau : les deux) */
+var SITU_NIV={
+  T:{pas3:'« Grand point / petit point » : le point marqué en 3 touches compte double (S5).',
+     vite:'« Balle facile » : 7 constructions en 3 touches sur 10 balles (S6).',
+     faute:'« Réception en 4 niveaux » : niveau suivant à 7 réussites sur 10 (S2).',
+     def:'« Attaque contre défense 4c4 » : fléchi, replacé au fond avant la frappe (S6).',
+     rec:'« Réception notée sous service ciblé » (S5) · « Service et réception notée » (S4).',
+     plus:'« Attaque à 4 » : finir la 3e touche vers une zone libre (S4).'},
+  P:{pas3:'« Grand point / petit point » : le point marqué en 3 touches compte double (S6).',
+     vite:'« 3c3 en triangle » : un passeur avant fixe, deux arrières, engagement en passe (S4).',
+     faute:'« 2c2 à contrat » : moins de 3 ballons non touchés par match (S2).',
+     def:'« Losange ou carré » : choisir son organisation à 4 pour couvrir le terrain (S7).',
+     rec:'« Service et réception notée » (S3) · « Réception notée + vraie passe » (S4).',
+     plus:'« Attaque à 4 » : finir la 3e touche vers une zone libre (S5).'}};
 /* Même équipe au match précédent (même nom) : évolution de la part des points en 3 touches */
 function evol(m,T){var nom=(T==='A'?m.a:m.b).trim().toLowerCase();if(!nom)return '';
   var i=-1;st.list.forEach(function(x,j){if(x.id===m.id)i=j});

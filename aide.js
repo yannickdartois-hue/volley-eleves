@@ -1,7 +1,7 @@
 /* aide.js — mode d'emploi de l'appli élève « Observation volley » (lu par eps-aide.js) */
 window.EPS_AIDE={appli:'Volley-ball · Observation (élève)',bas:'16px',publics:[
 {id:'eleve',titre:'Élève',chapitres:[
-{t:'Avant le match',html:`<ol><li>Écris le nom des deux équipes, ton prénom (observateur) et le numéro du terrain.</li>
+{t:'Avant le match',html:`<ol><li>Écris le nom des deux équipes, ton prénom (observateur), le numéro du terrain et le <b>niveau</b> (Terminale ou Première) : les situations proposées en fin de match viennent du cycle de ce niveau.</li>
 <li>Touche <span class="bouton">Commencer le match</span>.</li></ol><p class="astuce">Un seul observateur par terrain, avec la tablette.</p>`},
 {t:'Pendant le match',html:`<ul><li>À chaque point, touche dans la colonne de l’équipe qui marque <b>comment</b> le point a été marqué :
 <ul><li><b>Attaque en 3 touches</b> : réception, passe, attaque ;</li><li><b>Renvoi en 1 ou 2 touches</b> ;</li><li><b>Service gagnant</b> : ace ou réception ratée ;</li><li><b>Faute adverse</b> : filet, dehors, ballon non renvoyé.</li></ul></li>
