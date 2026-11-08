@@ -8,6 +8,7 @@ window.EPS_AIDE={appli:'Volley-ball · Observation (élève)',bas:'16px',publics
 <li>Erreur ? <span class="bouton">↶ Annuler le dernier point</span>.</li>
 <li>À la fin : <span class="bouton">Fin du match</span> (toucher deux fois pour confirmer s’il n’y a aucun point).</li></ul>`},
 {t:'Après le match',html:`<ul><li>Chaque équipe voit sa répartition des points, un <b>point fort</b> et une chose <b>à travailler</b>.</li>
+<li>Puis une <b>situation du cycle</b> pour progresser, un <b>objectif chiffré</b> pour le prochain match et, si la même équipe (même nom) a déjà été observée sur la tablette, l’évolution de ses points en 3 touches.</li>
 <li>Montre le <b>QR code</b> au professeur : il le scanne pour récupérer le match.</li>
 <li><span class="bouton">Corriger le match</span> rouvre la saisie.</li>
 <li>Les matchs restent sur la tablette : « Revoir les matchs et leurs QR codes ». Supprime-les en fin de séance quand le professeur les a scannés.</li></ul>`},

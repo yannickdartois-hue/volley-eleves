@@ -65,6 +65,9 @@ input,select{font:inherit;font-size:20px;width:100%;padding:10px 12px;border:1.5
 .rcard.A .bfill{background:var(--a)} .rcard.B .bfill{background:var(--b)}
 .fort,.trav{margin:8px 0 0;padding:8px 10px;border-radius:10px;font-size:16px}
 .fort{background:var(--ok-bg)} .trav{background:var(--warn-bg)}
+.sit,.obj{margin:8px 0 0;padding:8px 10px;border-radius:10px;font-size:16px;background:var(--surface-2,#eef2f6)}
+.sit b,.obj b{display:block;font-size:max(12px,var(--fs-min,15px));text-transform:uppercase;letter-spacing:.05em}
+.evo{margin:8px 0 0;font-size:15px;color:var(--muted,#555)}
 .fort b,.trav b{display:block;font-size:max(12px,var(--fs-min,15px));text-transform:uppercase;letter-spacing:.05em}
 .fort b{color:var(--ok)} .trav b{color:var(--warn)}
 .qrbox{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:16px}
@@ -147,23 +150,44 @@ function analyse(m,T){var me=counts(m.q,T),op=counts(m.q,T==='A'?'B':'A'),n=tot(
   if(n){
     if(me.a/n>=0.4&&me.a>=2)F.push([3,'Vous construisez : '+pct(me.a,n)+' % de vos points marqués en attaque à 3 touches.']);
     if(me.s>=3&&me.s/n>=0.25)F.push([2,'Votre service rapporte : '+me.s+' points marqués directement.']);
-    if(me.f/n>=0.5&&n>=4)W.push([3,'Vous marquez surtout sur les fautes de l’adversaire ('+pct(me.f,n)+' %). → Cherchez la 3e touche pour attaquer.']);
-    if(me.r/n>=0.5&&n>=4)W.push([2.5,'Vous renvoyez trop vite ('+pct(me.r,n)+' % des points en 1 ou 2 touches). → Une passe haute à un partenaire avant de renvoyer.']);
+    if(me.f/n>=0.5&&n>=4)W.push([3,'k:pas3|Vous marquez surtout sur les fautes de l’adversaire ('+pct(me.f,n)+' %). → Cherchez la 3e touche pour attaquer.']);
+    if(me.r/n>=0.5&&n>=4)W.push([2.5,'k:vite|Vous renvoyez trop vite ('+pct(me.r,n)+' % des points en 1 ou 2 touches). → Une passe haute à un partenaire avant de renvoyer.']);
   }
   if(no){
-    if(op.f/no>=0.5&&no>=4)W.push([3.2,'Trop de points donnés : '+op.f+' fautes de votre part. → Assurez le renvoi, jouez haut.']);
-    if(op.a>=3&&op.a/no>=0.4)W.push([2.6,op.a+' points encaissés sur attaque adverse. → En défense : fléchi, replacé au fond avant la frappe.']);
-    if(op.s>=3)W.push([2.8,op.s+' points perdus directement sur le service adverse. → En réception : fléchis, on appelle le ballon.']);
+    if(op.f/no>=0.5&&no>=4)W.push([3.2,'k:faute|Trop de points donnés : '+op.f+' fautes de votre part. → Assurez le renvoi, jouez haut.']);
+    if(op.a>=3&&op.a/no>=0.4)W.push([2.6,'k:def|'+op.a+' points encaissés sur attaque adverse. → En défense : fléchi, replacé au fond avant la frappe.']);
+    if(op.s>=3)W.push([2.8,'k:rec|'+op.s+' points perdus directement sur le service adverse. → En réception : fléchis, on appelle le ballon.']);
     if(op.f/no<=0.25&&no>=5)F.push([1.5,'Peu de fautes : seulement '+op.f+' point'+(op.f>1?'s':'')+' donné'+(op.f>1?'s':'')+' à l’adversaire.']);
   }
   F.sort(function(a,b){return b[0]-a[0]});W.sort(function(a,b){return b[0]-a[0]});
   var fort=F[0]?F[0][1]:(n?'Votre point fort de ce match : '+TYPES.filter(function(t){return t.k===best(me)})[0].t.toLowerCase()+' ('+me[best(me)]+' points).':'Aucun point marqué : on recommence au prochain match !');
-  var trav=W[0]?W[0][1]:'Continuez : cherchez encore plus d’attaques en 3 touches.';
-  return {me:me,n:n,fort:fort,trav:trav}}
+  var w0=W[0]?W[0][1].split('|'):['k:plus','Continuez : cherchez encore plus d’attaques en 3 touches.'],cle=w0[0].slice(2),trav=w0[1];
+  var P=function(x,mot){return x+' '+mot+(x>1?'s':'')};
+  var obj={pas3:'au moins '+P(me.a+2,'point')+' en attaque à 3 touches',vite:'au moins '+P(me.a+2,'point')+' en attaque à 3 touches',
+    faute:'au plus '+P(Math.max(1,op.f-2),'point')+' donné'+(Math.max(1,op.f-2)>1?'s':'')+' sur vos fautes',def:'au plus '+P(Math.max(1,op.a-1),'point')+' encaissé'+(Math.max(1,op.a-1)>1?'s':'')+' sur attaque adverse',
+    rec:op.s>2?'au plus '+P(op.s-2,'point')+' perdu'+(op.s-2>1?'s':'')+' sur le service adverse':'aucun point perdu sur le service adverse',plus:'au moins '+P(me.a+1,'point')+' en attaque à 3 touches'}[cle];
+  return {me:me,op:op,n:n,fort:fort,trav:trav,cle:cle,sit:SITU[cle],obj:obj}}
+/* Situation du cycle qui répond à la priorité (outil de cycle volley, Terminale et Première) */
+var SITU={
+  pas3:'« Grand point / petit point » : le point marqué en 3 touches compte double (S5 Terminale, S6 Première).',
+  vite:'« Balle facile » : 7 constructions en 3 touches sur 10 balles (S6 Terminale) · « 3c3 en triangle » (S4 Première).',
+  faute:'« Réception en 4 niveaux » (S2 Terminale) · « 2c2 à contrat » : moins de 3 ballons non touchés par match (S2 Première).',
+  def:'« Attaque contre défense 4c4 » : fléchi, replacé au fond avant la frappe (S6 Terminale).',
+  rec:'« Réception notée » : sous service ciblé (S5 Terminale) · « Service et réception notée » (S3 Première, S4 Terminale).',
+  plus:'« Attaque à 4 » : finir la 3e touche vers une zone libre (S4 Terminale, S5 Première).'};
+/* Même équipe au match précédent (même nom) : évolution de la part des points en 3 touches */
+function evol(m,T){var nom=(T==='A'?m.a:m.b).trim().toLowerCase();if(!nom)return '';
+  var i=-1;st.list.forEach(function(x,j){if(x.id===m.id)i=j});
+  for(var j=i+1;j<st.list.length&&i>=0;j++){var p=st.list[j],U=p.a.trim().toLowerCase()===nom?'A':(p.b.trim().toLowerCase()===nom?'B':'');
+    if(!U)continue;var av=counts(p.q,U),ap=counts(m.q,T),na=tot(av),nb=tot(ap);if(!na||!nb)return '';
+    var x=pct(av.a,na),y=pct(ap.a,nb);return 'Attaque en 3 touches : '+x+' % au match précédent → '+y+' % aujourd’hui '+(y>x?'↑':y<x?'↓':'=');}
+  return ''}
 function best(c){var k='a';['r','s','f'].forEach(function(x){if(c[x]>c[k])k=x});return k}
 function rcard(m,T){var r=analyse(m,T),name=T==='A'?m.a:m.b;
   return '<div class="rcard '+T+'"><h3>'+esc(name)+' · '+r.n+' pts</h3><div class="bars">'+TYPES.map(function(x){var v=r.me[x.k];return '<div class="brow"><span>'+x.t+'</span><div class="btrack"><div class="bfill" style="width:'+pct(v,r.n)+'%"></div></div><span>'+v+' ('+pct(v,r.n)+' %)</span></div>'}).join('')+'</div>'+
-  '<p class="fort"><b>Point fort</b>'+esc(r.fort)+'</p><p class="trav"><b>À travailler</b>'+esc(r.trav)+'</p></div>'}
+  '<p class="fort"><b>Point fort</b>'+esc(r.fort)+'</p><p class="trav"><b>À travailler</b>'+esc(r.trav)+'</p>'+
+  '<p class="sit"><b>Pour progresser</b>'+esc(r.sit)+'</p><p class="obj"><b>Objectif au prochain match</b>'+esc(r.obj.charAt(0).toUpperCase()+r.obj.slice(1))+'.</p>'+
+  (function(e){return e?'<p class="evo">'+esc(e)+'</p>':''})(evol(m,T))+'</div>'}
 function payload(m){var o={k:'vly',v:1,id:m.id,d:m.d.slice(0,16),o:m.o,tr:m.tr,a:m.a,b:m.b,q:m.q};
   return JSON.stringify(o).replace(/[\u007f-￿]/g,function(c){return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4)})}
 function qrSvg(text){var q=qrcode(0,'L');q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}
