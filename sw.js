@@ -1,6 +1,6 @@
-const V='volley-eleves-v1';
+const V='volley-eleves-v1.0';
 // Toutes les applis partagent le même stockage (même adresse github.io) : on n'efface QUE les anciennes versions de CETTE appli.
-const MES_CACHES=/^(?:obs\-volley\-v|volley\-eleves\-v)\d+$/;
+const MES_CACHES=/^(?:obs\-volley\-v|volley\-eleves\-v)\d+(?:\.\d+)?$/;
 
 // Wi-Fi faible au gymnase : si le réseau ne répond pas en 3 s, on ouvre la copie gardée sur l'appareil.
 const sous3s=p=>{p.catch(()=>{});return Promise.race([p,new Promise((_,non)=>setTimeout(()=>non(new Error('réseau lent')),3000))])};
