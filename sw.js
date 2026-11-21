@@ -1,4 +1,4 @@
-const V='volley-eleves-v1.2';
+const V='volley-eleves-v1.3';
 // Toutes les applis partagent le même stockage (même adresse github.io) : on n'efface QUE les anciennes versions de CETTE appli.
 const MES_CACHES=/^(?:obs\-volley\-v|volley\-eleves\-v)\d+(?:\.\d+)?$/;
 
